@@ -1,0 +1,6 @@
+{
+  "name": "Marketplace Link Tree",
+  "description": "Landing page minimalis dan responsif untuk mengumpulkan semua link marketplace Anda seperti Shopee, Tokopedia, TikTok Shop, Lazada, Blibli, dan WhatsApp dalam satu tempat.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
