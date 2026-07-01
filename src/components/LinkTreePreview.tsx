@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ProfileConfig, ThemeConfig } from '../types';
 import { THEMES } from '../constants';
 import { BrandIcon } from './BrandLogos';
-import { ExternalLink, QrCode } from 'lucide-react';
+import { ExternalLink, QrCode, Search, X } from 'lucide-react';
 
 interface LinkTreePreviewProps {
   config: ProfileConfig;
@@ -11,6 +11,8 @@ interface LinkTreePreviewProps {
 }
 
 export const LinkTreePreview: React.FC<LinkTreePreviewProps> = ({ config, previewUrl }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
   const activeTheme = useMemo(() => {
     return THEMES.find((t) => t.id === config.themeId) || THEMES[0];
   }, [config.themeId]);
@@ -18,6 +20,32 @@ export const LinkTreePreview: React.FC<LinkTreePreviewProps> = ({ config, previe
   const activeLinks = useMemo(() => {
     return config.links.filter((l) => l.active && l.url.trim() !== '');
   }, [config.links]);
+
+  const filteredLinks = useMemo(() => {
+    if (!searchQuery.trim()) return activeLinks;
+    const query = searchQuery.toLowerCase().trim();
+    return activeLinks.filter((l) => 
+      l.title.toLowerCase().includes(query) || 
+      l.platform.toLowerCase().includes(query)
+    );
+  }, [activeLinks, searchQuery]);
+
+  const searchInputStyle = useMemo(() => {
+    switch (config.themeId) {
+      case 'cosmic':
+        return 'bg-slate-900/60 border-slate-800 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20';
+      case 'sand':
+        return 'bg-[#FCFBF9] border-[#E6DDD4] text-[#3E2723] placeholder-[#8D6E63]/60 focus:border-[#5D4037] focus:ring-[#5D4037]/20';
+      case 'mono':
+        return 'bg-white border-2 border-black text-black placeholder-zinc-500 focus:outline-none focus:ring-0';
+      case 'emerald':
+        return 'bg-emerald-50/50 border-emerald-100 text-[#1B3B2B] placeholder-[#4F735F]/60 focus:border-[#1B3B2B] focus:ring-[#1B3B2B]/20';
+      case 'orchid':
+        return 'bg-pink-50/20 border-pink-100 text-[#3B1B2C] placeholder-[#8C5D76]/60 focus:border-[#8C5D76] focus:ring-[#8C5D76]/20';
+      default:
+        return 'bg-white border-slate-200/80 text-slate-800 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400/20';
+    }
+  }, [config.themeId]);
 
   const qrCodeUrl = useMemo(() => {
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
@@ -105,23 +133,18 @@ export const LinkTreePreview: React.FC<LinkTreePreviewProps> = ({ config, previe
             </div>
           ) : (
             activeLinks.map((link, index) => {
-              // Standard link handler safely opening link in new tab
-              const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                // Ensure protocol exists
-                let formattedUrl = link.url.trim();
-                if (!/^https?:\/\//i.test(formattedUrl)) {
-                  formattedUrl = 'https://' + formattedUrl;
-                }
-                e.currentTarget.href = formattedUrl;
-              };
+              // Ensure protocol exists for absolute external link redirection
+              let formattedUrl = link.url.trim();
+              if (formattedUrl && !/^https?:\/\//i.test(formattedUrl)) {
+                formattedUrl = 'https://' + formattedUrl;
+              }
 
               return (
                 <motion.a
                   key={link.id}
-                  href={link.url}
+                  href={formattedUrl || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={handleLinkClick}
                   initial={{ y: 15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.15 + index * 0.05 }}
